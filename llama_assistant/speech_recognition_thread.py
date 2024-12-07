@@ -23,7 +23,7 @@ class SpeechRecognitionThread(QThread):
         self.recording = False
 
         # Initialize Whisper model
-        self.whisper = Whisper("tiny")
+        self.whisper = Whisper.from_pretrained("tiny.en")
 
         # Create temporary folder for audio files
         self.tmp_audio_folder = llama_assistant_dir / "tmp_audio"

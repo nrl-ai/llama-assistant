@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llama-assistant"
-version = "0.1.42"
+version = "0.1.43"
 authors = [
     {name = "Viet-Anh Nguyen", email = "vietanh.dev@gmail.com"},
 ]
 description = "An AI assistant powered by Llama models"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = ["AI", "assistant", "Llama", "PyQt6"]
 license = {text = "MIT"}
 classifiers = [
@@ -19,7 +19,6 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

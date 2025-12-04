@@ -7,7 +7,7 @@
 
 [![Llama Assistant](https://user-images.githubusercontent.com/18329471/234640541-a6a65fbc-d7a5-4ec3-9b65-55305b01a7aa.png)](https://www.youtube.com/watch?v=kyRf8maKuDc)
 
-![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![Llama 3](https://img.shields.io/badge/Llama-3-green.svg)
 ![DeepSeek](https://img.shields.io/badge/DeepSeek-R1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
@@ -83,7 +83,7 @@ https://github.com/user-attachments/assets/af2c544b-6d46-4c44-87d8-9a051ba213db
 
 ## Technologies Used
 
-- ![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=flat-square&logo=python&logoColor=white)
+- ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python&logoColor=white)
 - ![Llama](https://img.shields.io/badge/Llama-3.2-yellow?style=flat-square&logo=meta&logoColor=white)
 - ![SpeechRecognition](https://img.shields.io/badge/SpeechRecognition-3.8-green?style=flat-square&logo=google&logoColor=white)
 - ![yt](https://img.shields.io/badge/PyQt-5-41CD52?style=flat-square&logo=qt&logoColor=white)

@@ -1,5 +1,5 @@
 from typing import Set, Optional, Dict
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     QThread,
     pyqtSignal,
 )

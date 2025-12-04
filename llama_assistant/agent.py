@@ -210,9 +210,9 @@ class RAGAgent(Workflow):
         image = ev.image
         lookup_files = ev.lookup_files if ev.lookup_files else set()
         streaming = ev.streaming
-        await ctx.set("query_str", query_str)
-        await ctx.set("image", image)
-        await ctx.set("streaming", streaming)
+        await ctx.store.set("query_str", query_str)
+        await ctx.store.set("image", image)
+        await ctx.store.set("streaming", streaming)
 
         # update index if needed
         if lookup_files != self.lookup_files:
@@ -228,7 +228,7 @@ class RAGAgent(Workflow):
         """
         Condense the chat history and the query into a single query. Only used for retrieval.
         """
-        query_str = await ctx.get("query_str")
+        query_str = await ctx.store.get("query_str")
 
         if len(self.chat_history) > 0 and self.retriever is not None:
             standalone_query = self.llm.create_chat_completion(
@@ -290,10 +290,10 @@ class RAGAgent(Workflow):
     @step
     async def llm_response(self, ctx: Context, retrieval_ev: RetrievalEvent) -> StopEvent:
         nodes = retrieval_ev.nodes
-        query_str = await ctx.get("query_str")
-        image = await ctx.get("image")
+        query_str = await ctx.store.get("query_str")
+        image = await ctx.store.get("image")
         query_with_ctx = self._prepare_query_with_context(query_str, nodes)
-        streaming = await ctx.get("streaming", False)
+        streaming = await ctx.store.get("streaming", default=False)
 
         if image:
             formated_message = {

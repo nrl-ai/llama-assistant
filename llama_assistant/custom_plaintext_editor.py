@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QPlainTextEdit
-from PyQt5.QtGui import QKeyEvent, QColor, QTextCharFormat, QBrush
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QPlainTextEdit
+from PyQt6.QtGui import QKeyEvent, QColor, QTextCharFormat, QBrush
+from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class CustomPlainTextEdit(QPlainTextEdit):

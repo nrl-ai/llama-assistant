@@ -7,7 +7,7 @@ import warnings
 
 from llama_assistant import config
 
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QPushButton,
@@ -17,8 +17,8 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QSystemTrayIcon,
 )
-from PyQt5.QtCore import Qt, QTimer, QRect
-from PyQt5.QtGui import (
+from PyQt6.QtCore import Qt, QTimer, QRect
+from PyQt6.QtGui import (
     QPixmap,
     QPainter,
     QDragEnterEvent,
@@ -48,10 +48,6 @@ class LlamaAssistant(QMainWindow):
         self.wake_word_detector = None
         self.load_settings()
         self.config = config  # Make config accessible to UIManager
-        self.ui_manager = UIManager(self)
-        self.tray_manager = TrayManager(self)
-        self.screen_capture_widget = ScreenCaptureWidget(self)
-        self.setup_global_shortcut()
         self.last_response = ""
         self.dropped_image = None
         self.dropped_files = set()
@@ -66,23 +62,27 @@ class LlamaAssistant(QMainWindow):
         self.markdown_creator = mistune.create_markdown()
         self.gen_mark_down = True
         self.has_ocr_context = False
+        self.ui_manager = UIManager(self)
+        self.tray_manager = TrayManager(self)
+        self.screen_capture_widget = ScreenCaptureWidget(self)
+        self.setup_global_shortcut()
 
         # Add drag-drop move support
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.oldPos = None
 
     def mousePressEvent(self, event: QMouseEvent):
-        if event.button() == Qt.LeftButton:
-            self.oldPos = event.globalPos()
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.oldPos = event.globalPosition().toPoint()
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.oldPos is not None:
-            delta = event.globalPos() - self.oldPos
+            delta = event.globalPosition().toPoint() - self.oldPos
             self.move(self.x() + delta.x(), self.y() + delta.y())
-            self.oldPos = event.globalPos()
+            self.oldPos = event.globalPosition().toPoint()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.oldPos = None
 
     def capture_screenshot(self):
@@ -342,7 +342,7 @@ class LlamaAssistant(QMainWindow):
         self.ui_manager.chat_box.append(f'<span style="color: #aaa;"><b>You:</b></span> {prompt}')
         self.ui_manager.chat_box.append('<span style="color: #aaa;"><b>AI:</b></span> ')
 
-        self.ui_manager.chat_box.moveCursor(QTextCursor.End)
+        self.ui_manager.chat_box.moveCursor(QTextCursor.MoveOperation.End)
         self.start_cursor_pos = self.ui_manager.chat_box.textCursor().position()
 
         image = image_to_base64_data_uri(image_path)
@@ -366,7 +366,7 @@ class LlamaAssistant(QMainWindow):
         cursor = self.ui_manager.chat_box.textCursor()
         cursor.setPosition(self.start_cursor_pos)
         # Select all text from the start_pos to the end
-        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.KeepAnchor)
         # Remove the selected text
         cursor.removeSelectedText()
 
@@ -410,7 +410,7 @@ class LlamaAssistant(QMainWindow):
         )
 
     def on_processing_finished(self):
-        self.ui_manager.chat_box.textCursor().movePosition(QTextCursor.End)
+        self.ui_manager.chat_box.textCursor().movePosition(QTextCursor.MoveOperation.End)
 
     def show_chat_box(self):
         if self.ui_manager.scroll_area.isHidden():
@@ -437,7 +437,8 @@ class LlamaAssistant(QMainWindow):
         self.ui_manager.input_field.setFocus()
         self.ui_manager.copy_button.hide()
         self.ui_manager.clear_button.hide()
-        self.processing_thread.clear_chat_history()
+        if self.processing_thread:
+            self.processing_thread.clear_chat_history()
         self.setFixedHeight(400)  # Reset to default height
 
     def dragEnterEvent(self, event: QDragEnterEvent):

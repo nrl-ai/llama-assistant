@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 from pynput import keyboard
 
 from llama_assistant.config import DEFAULT_LAUNCH_SHORTCUT

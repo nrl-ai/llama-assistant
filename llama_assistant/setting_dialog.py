@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QDialog,
     QFormLayout,
     QPushButton,
@@ -19,8 +19,8 @@ from PyQt5.QtWidgets import (
     QWidget,
     QGridLayout,
 )
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QColor
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QColor
 from pynput import keyboard
 
 from llama_assistant.shortcut_recorder import ShortcutRecorder
@@ -132,7 +132,7 @@ class SettingsDialog(QDialog):
 
         # Models selection in form layout
         models_form = QFormLayout()
-        models_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        models_form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.text_model_combo = QComboBox()
         self.text_model_combo.addItems(self.get_model_names_by_type("text"))
@@ -198,7 +198,7 @@ class SettingsDialog(QDialog):
 
         # Embed model selection
         form_layout = QFormLayout()
-        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.embed_model_combo = QComboBox()
         self.embed_model_combo.addItems(config.DEFAULT_EMBEDING_MODELS)
@@ -318,7 +318,7 @@ class SettingsDialog(QDialog):
         self.shortcut_recorder.setText(config.DEFAULT_LAUNCH_SHORTCUT)
 
     def update_hey_llama_mic_state(self, state):
-        self.hey_llama_mic_checkbox.setEnabled(state == Qt.Checked)
+        self.hey_llama_mic_checkbox.setEnabled(state == Qt.CheckState.Checked)
 
     def load_settings(self):
         if config.settings_file.exists():

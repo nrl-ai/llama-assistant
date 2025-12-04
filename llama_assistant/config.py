@@ -7,7 +7,7 @@ DEFAULT_SETTINGS = {
     "shortcut": DEFAULT_LAUNCH_SHORTCUT,
     "color": "#1E1E1E",
     "transparency": 95,
-    "text_model": "hugging-quants/Llama-3.2-1B-Instruct-Q4_K_M-GGUF",
+    "text_model": "unsloth/gemma-3n-E4B-it-GGUF-Q4_K_M",
     "multimodal_model": "vikhyatk/moondream2",
     "text_reasoning_model": "bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF-Q4_K_M",
     "reasoning_enabled": False,
@@ -53,6 +53,14 @@ DEFAULT_EMBEDING_MODELS = [
 
 DEFAULT_MODELS = [
     # LLMs
+    {
+        "model_name": "gemma-3n-E4B-it-Q4_K_M-GGUF",
+        "model_id": "unsloth/gemma-3n-E4B-it-GGUF-Q4_K_M",
+        "model_type": "text",
+        "model_path": None,
+        "repo_id": "unsloth/gemma-3n-E4B-it-GGUF",
+        "filename": "gemma-3n-E4B-it-Q4_K_M.gguf",
+    },
     {
         "model_name": "Llama-3.2-1B-Instruct-Q4_K_M-GGUF",
         "model_id": "hugging-quants/Llama-3.2-1B-Instruct-Q4_K_M-GGUF",

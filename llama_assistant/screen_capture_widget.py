@@ -1,16 +1,15 @@
 from typing import TYPE_CHECKING
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
-    QDesktopWidget,
     QPushButton,
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
     QFrame,
 )
-from PyQt5.QtCore import Qt, QRect, QTimer, QSize, QRectF
-from PyQt5.QtGui import QPainter, QColor, QPen, QKeyEvent, QPainterPath
+from PyQt6.QtCore import Qt, QRect, QTimer, QSize, QRectF
+from PyQt6.QtGui import QPainter, QColor, QPen, QKeyEvent, QPainterPath, QScreen
 
 from llama_assistant import config
 from llama_assistant.ocr_engine import OCREngine
@@ -24,19 +23,19 @@ LEFT_BOTTOM_MARGIN = 64
 class ScreenCaptureWidget(QWidget):
     def __init__(self, parent: "LlamaAssistantApp"):
         super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self.parent = parent
         self.ocr_engine = OCREngine()
 
         # Get screen size
-        screen = QDesktopWidget().screenGeometry()
+        screen = QApplication.primaryScreen().geometry()
         self.screen_width = screen.width()
         self.screen_height = screen.height()
         self.setGeometry(0, 0, self.screen_width, self.screen_height)
 
         # Set crosshairs cursor
-        self.setCursor(Qt.CrossCursor)
+        self.setCursor(Qt.CursorShape.CrossCursor)
 
         # To store the start and end points of the mouse region
         self.start_point = None
@@ -71,7 +70,7 @@ class ScreenCaptureWidget(QWidget):
         # Create close button
         self.close_button = QPushButton("×", close_container)
         self.close_button.setFixedSize(24, 24)
-        self.close_button.setCursor(Qt.PointingHandCursor)
+        self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.setStyleSheet(
             """
             QPushButton {
@@ -97,7 +96,7 @@ class ScreenCaptureWidget(QWidget):
 
         self.preview_label = QLabel()
         self.preview_label.setMinimumSize(QSize(400, 250))  # Bigger preview
-        self.preview_label.setAlignment(Qt.AlignCenter)
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setStyleSheet("background-color: transparent;")
         self.preview_label.setScaledContents(True)  # Make content scale to fit label
         preview_layout.addWidget(self.preview_label)
@@ -105,8 +104,8 @@ class ScreenCaptureWidget(QWidget):
         # Modern button styling
         self.ocr_button = QPushButton("OCR", self.button_widget)
         self.ask_button = QPushButton("Ask", self.button_widget)
-        self.ocr_button.setCursor(Qt.PointingHandCursor)
-        self.ask_button.setCursor(Qt.PointingHandCursor)
+        self.ocr_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.ask_button.setCursor(Qt.CursorShape.PointingHandCursor)
         opacity = self.parent.settings.get("transparency", 90) / 100
         base_style = """
             border: none;
@@ -180,7 +179,7 @@ class ScreenCaptureWidget(QWidget):
         self.parent.show()
 
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             if self.captured:
                 self.discard_capture()
             else:
@@ -188,14 +187,14 @@ class ScreenCaptureWidget(QWidget):
                 self.parent.show()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and not self.captured:
-            self.start_point = event.pos()  # Capture start position
-            self.end_point = event.pos()  # Initialize end point to start position
+        if event.button() == Qt.MouseButton.LeftButton and not self.captured:
+            self.start_point = event.position().toPoint()  # Capture start position
+            self.end_point = event.position().toPoint()  # Initialize end point to start position
             print(f"Mouse press at {self.start_point}")
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton and not self.captured:
-            self.end_point = event.pos()  # Capture end position
+        if event.button() == Qt.MouseButton.LeftButton and not self.captured:
+            self.end_point = event.position().toPoint()  # Capture end position
 
             print(f"Mouse release at {self.end_point}")
 
@@ -212,7 +211,7 @@ class ScreenCaptureWidget(QWidget):
     def mouseMoveEvent(self, event):
         if self.start_point and not self.captured:
             # Update the end_point to the current mouse position as it moves
-            self.end_point = event.pos()
+            self.end_point = event.position().toPoint()
 
             # Trigger repaint to update the rectangle
             self.update()
@@ -260,7 +259,7 @@ class ScreenCaptureWidget(QWidget):
         if self.start_point and self.end_point:
             # Create a painter object
             painter = QPainter(self)
-            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
             # Set the pen color to red with a modern look
             pen = QPen(QColor(255, 69, 58))  # Apple-style red
@@ -301,6 +300,6 @@ class ScreenCaptureWidget(QWidget):
                 y_pos = max(0, rect.top() - widget_height - LEFT_BOTTOM_MARGIN)
 
             self.button_widget.setGeometry(x_pos, y_pos, widget_width, widget_height)
-            self.button_widget.setAttribute(Qt.WA_TranslucentBackground)
-            self.button_widget.setWindowFlags(Qt.FramelessWindowHint)
+            self.button_widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.button_widget.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             self.button_widget.show()

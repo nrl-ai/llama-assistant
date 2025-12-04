@@ -3,7 +3,7 @@ import os
 import re
 import traceback
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal
 import pyaudio
 import wave
 
@@ -102,7 +102,7 @@ class SpeechRecognitionThread(QThread):
 
 # Updated demo code
 if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
+    from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
     import sys
 
     class DemoWidget(QWidget):
@@ -158,4 +158,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     demo = DemoWidget()
     demo.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -2,7 +2,7 @@ import pyaudio
 import numpy as np
 from openwakeword.model import Model
 from openwakeword.utils import download_models
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal
 import time
 
 from llama_assistant.utils import get_resource_path

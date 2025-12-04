@@ -1,8 +1,6 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtSvg import QSvgRenderer
-from PyQt5.QtCore import QByteArray
-from PyQt5.QtGui import QPixmap, QPainter
+from PyQt6.QtCore import Qt, QByteArray
+from PyQt6.QtGui import QIcon, QPixmap, QPainter
+from PyQt6.QtSvg import QSvgRenderer
 
 # Updated SVG icons with white fill and stroke
 copy_icon_svg = """

@@ -3,8 +3,8 @@ import os
 import sys
 from importlib import resources
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt
 
 
 def image_to_base64_data_uri(file_path):

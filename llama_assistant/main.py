@@ -1,15 +1,12 @@
 import sys
 import multiprocessing
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import Qt
 from llama_assistant.llama_assistant_app import LlamaAssistant
 
 
 def main():
-    # Enable high DPI scaling
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
+    # Enable high DPI scaling (handled automatically in PyQt6)
     app = QApplication(sys.argv)
     ex = LlamaAssistant()
     ex.show()

@@ -1,22 +1,22 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QTextBrowser,
     QPushButton,
     QScrollArea,
-    QShortcut,
     QSizePolicy,
     QSpacerItem,
     QLabel,
 )
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     Qt,
     QSize,
 )
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QColor,
     QKeySequence,
+    QShortcut,
 )
 
 from llama_assistant.custom_plaintext_editor import CustomPlainTextEdit
@@ -99,7 +99,7 @@ class UIManager:
         self.input_field.setPlaceholderText("Ask me anything...")
         self.input_field.setAcceptDrops(True)
         self.input_field.setFixedHeight(100)
-        self.input_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.input_field.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.input_field.dragEnterEvent = self.parent.dragEnterEvent
         self.input_field.dropEvent = self.parent.dropEvent
         input_layout.addWidget(self.input_field)
@@ -263,14 +263,14 @@ class UIManager:
         self.scroll_area.hide()  # Hide the scroll area initially
 
         # Ensure the scroll area can expand fully in the layout
-        self.scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         main_layout.addWidget(self.scroll_area)
 
         self.parent.esc_shortcut = QShortcut(QKeySequence("Esc"), self.parent)
         self.parent.esc_shortcut.activated.connect(self.parent.hide)
 
         # Add an expanding spacer
-        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         main_layout.addItem(spacer)
 
     def update_styles(self):

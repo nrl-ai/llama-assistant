@@ -175,6 +175,8 @@ class LlamaAssistant(QMainWindow):
             self.save_settings()
             self.load_settings()
             self.ui_manager.update_styles()
+            # Refresh action buttons in case they were modified
+            self.ui_manager.refresh_action_buttons()
 
             if old_shortcut != self.settings["shortcut"]:
                 msg = QMessageBox()
@@ -289,29 +291,31 @@ class LlamaAssistant(QMainWindow):
     def on_task_button_clicked(self):
         button = self.sender()
         task = button.text()
+        action_prompt = button.property("action_prompt")
         message = self.ui_manager.input_field.toPlainText()
         if message == "":
             return
-        self.process_text(message, self.dropped_files, task)
+        self.process_text(message, self.dropped_files, task, action_prompt)
 
-    def process_text(self, message, file_paths, task="chat"):
+    def process_text(self, message, file_paths, task="chat", action_prompt=None):
         if task != "chat":
             self.clear_chat()
         self.show_chat_box()
         if task == "chat":
             prompt = message
-        elif task == "Summarize":
-            prompt = f"Summarize the following text: {message}"
-        elif task == "Rephrase":
-            prompt = f"Rephrase the following text {message}"
-        elif task == "Fix Grammar":
-            prompt = f"Fix the grammar in the following text:\n {message}"
-        elif task == "Brainstorm":
-            prompt = f"Brainstorm ideas related to: {message}"
-        elif task == "Write Email":
-            prompt = f"Write an email about: {message}"
+            display_message = message
+        elif action_prompt:
+            # Use the custom action prompt
+            prompt = f"{action_prompt}\n\n{message}"
+            display_message = f"<i>{action_prompt}</i><br><br>{message}"
+        else:
+            # Fallback for any legacy tasks
+            prompt = message
+            display_message = message
 
-        self.ui_manager.chat_box.append(f'<span style="color: #aaa;"><b>You:</b></span> {message}')
+        self.ui_manager.chat_box.append(
+            f'<span style="color: #aaa;"><b>You:</b></span> {display_message}'
+        )
         self.ui_manager.chat_box.append(f'<span style="color: #aaa;"><b>AI ({task}):</b></span> ')
 
         self.start_cursor_pos = self.ui_manager.chat_box.textCursor().position()

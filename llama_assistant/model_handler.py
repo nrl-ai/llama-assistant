@@ -223,6 +223,34 @@ class ModelHandler:
         if agent:
             agent.chat_history.add_message({"role": role, "content": message})
 
+    def add_conversation_turn(
+        self, user_message: str, assistant_response: str, image: Optional[str] = None
+    ):
+        """Add both user message and assistant response to chat history together"""
+        if self.loaded_agent is None:
+            print("Agent has not been initialized. Cannot update chat history.")
+            return
+
+        agent = self.loaded_agent.get("agent")
+        if agent:
+            # Format user message
+            if image:
+                user_msg = {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user_message},
+                        {"type": "image_url", "image_url": {"url": image}},
+                    ],
+                }
+            else:
+                user_msg = {"role": "user", "content": user_message}
+
+            # Format assistant message
+            assistant_msg = {"role": "assistant", "content": assistant_response}
+
+            # Add both as a conversation turn
+            agent.chat_history.add_conversation_turn(user_msg, assistant_msg)
+
     def clear_chat_history(self):
         agent = self.loaded_agent.get("agent")
         if agent:

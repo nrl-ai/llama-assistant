@@ -18,14 +18,44 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QWidget,
     QGridLayout,
+    QTabWidget,
+    QTextEdit,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QColor
 from pynput import keyboard
+import html2text
 
 from llama_assistant.shortcut_recorder import ShortcutRecorder
 from llama_assistant import config
 from llama_assistant.setting_validator import validate_numeric_field
+
+
+class MarkdownTextEdit(QTextEdit):
+    """Custom QTextEdit that converts rich text paste to markdown"""
+
+    def insertFromMimeData(self, source):
+        """Override paste to convert rich text to markdown"""
+        if source.hasHtml():
+            # Convert HTML to markdown
+            html_content = source.html()
+            h = html2text.HTML2Text()
+            h.ignore_links = False
+            h.ignore_images = False
+            h.ignore_emphasis = False
+            h.body_width = 0  # Don't wrap lines
+            markdown_text = h.handle(html_content).strip()
+
+            # Insert as plain text
+            cursor = self.textCursor()
+            cursor.insertText(markdown_text)
+        elif source.hasText():
+            # Insert plain text normally
+            cursor = self.textCursor()
+            cursor.insertText(source.text())
+        else:
+            # Fallback to default behavior
+            super().insertFromMimeData(source)
 
 
 class SettingsDialog(QDialog):
@@ -34,76 +64,109 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Settings")
-        self.setMinimumWidth(950)
-        self.setMinimumHeight(500)
+        self.setMinimumWidth(850)
+        self.setMinimumHeight(650)
 
-        # Create main layout with scrolling
-        main_container = QWidget()
-        self.main_layout = QVBoxLayout()
-        main_container.setLayout(self.main_layout)
+        # Create main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 10)
 
-        # Set up scrollable area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(main_container)
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet(
+            """
+            QTabWidget::pane {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QTabBar::tab {
+                padding: 6px 12px;
+                margin-right: 2px;
+                border: 1px solid #ccc;
+                border-bottom: none;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                background-color: #f0f0f0;
+                font-size: 13px;
+            }
+            QTabBar::tab:selected {
+                background-color: white;
+                border-bottom: 1px solid white;
+                font-weight: bold;
+            }
+            QTabBar::tab:hover:!selected {
+                background-color: #e8e8e8;
+            }
+        """
+        )
+        main_layout.addWidget(self.tab_widget)
 
-        # Create a grid layout for organized settings display
-        self.grid_layout = QGridLayout()
-        self.main_layout.addLayout(self.grid_layout)
-
-        # General Settings Group (column 1)
-        self.create_general_settings_group()
-
-        # Appearance Settings Group (column 1)
-        self.create_appearance_settings_group()
-
-        # Model Settings Group (column 2)
-        self.create_model_settings_group()
-
-        # Voice Activation Settings Group (column 1)
-        self.create_voice_activation_settings_group()
-
-        # RAG Settings Group (column 2)
-        self.create_rag_settings_group()
+        # Create tabs
+        self.create_general_tab()
+        self.create_models_tab()
+        self.create_rag_tab()
+        self.create_actions_tab()
 
         # Create a horizontal layout for the save button
         button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(10, 5, 10, 0)
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(self.accept)
+        self.save_button.setMinimumWidth(100)
+        self.save_button.setStyleSheet(
+            """
+            QPushButton {
+                padding: 10px 24px;
+                border: none;
+                border-radius: 4px;
+                background-color: #0078d4;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #106ebe;
+            }
+            QPushButton:pressed {
+                background-color: #005a9e;
+            }
+        """
+        )
         button_layout.addStretch()
         button_layout.addWidget(self.save_button)
 
         # Add the button layout to the main layout
-        self.main_layout.addLayout(button_layout)
-
-        # Set the scroll area as the main widget
-        main_outer_layout = QVBoxLayout(self)
-        main_outer_layout.addWidget(scroll_area)
+        main_layout.addLayout(button_layout)
 
         self.load_settings()
 
-    def create_general_settings_group(self):
-        group_box = QGroupBox("General Settings")
-        layout = QVBoxLayout()
+    def create_general_tab(self):
+        """Create the General tab with shortcuts, appearance, and voice settings"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
 
-        shortcut_layout = QHBoxLayout()
-        shortcut_label = QLabel("Shortcut:")
+        # Shortcut Settings Group
+        shortcut_group = QGroupBox("Shortcut Settings")
+        shortcut_layout = QVBoxLayout()
+
+        shortcut_input_layout = QHBoxLayout()
+        shortcut_label = QLabel("Global Shortcut:")
         self.shortcut_recorder = ShortcutRecorder()
-        shortcut_layout.addWidget(shortcut_label)
-        shortcut_layout.addWidget(self.shortcut_recorder)
-        shortcut_layout.addStretch()
-        layout.addLayout(shortcut_layout)
+        shortcut_input_layout.addWidget(shortcut_label)
+        shortcut_input_layout.addWidget(self.shortcut_recorder)
+        shortcut_input_layout.addStretch()
+        shortcut_layout.addLayout(shortcut_input_layout)
 
         self.reset_shortcut_button = QPushButton("Reset Shortcut")
         self.reset_shortcut_button.clicked.connect(self.reset_shortcut)
-        layout.addWidget(self.reset_shortcut_button)
+        shortcut_layout.addWidget(self.reset_shortcut_button)
 
-        group_box.setLayout(layout)
-        self.grid_layout.addWidget(group_box, 0, 0)
+        shortcut_group.setLayout(shortcut_layout)
+        layout.addWidget(shortcut_group)
 
-    def create_appearance_settings_group(self):
-        group_box = QGroupBox("Appearance Settings")
-        layout = QVBoxLayout()
+        # Appearance Settings Group
+        appearance_group = QGroupBox("Appearance Settings")
+        appearance_layout = QVBoxLayout()
 
         color_layout = QHBoxLayout()
         color_label = QLabel("Background Color:")
@@ -112,7 +175,7 @@ class SettingsDialog(QDialog):
         color_layout.addWidget(color_label)
         color_layout.addWidget(self.color_button)
         color_layout.addStretch()
-        layout.addLayout(color_layout)
+        appearance_layout.addLayout(color_layout)
 
         transparency_layout = QHBoxLayout()
         transparency_label = QLabel("Transparency:")
@@ -121,16 +184,35 @@ class SettingsDialog(QDialog):
         self.transparency_slider.setValue(90)
         transparency_layout.addWidget(transparency_label)
         transparency_layout.addWidget(self.transparency_slider)
-        layout.addLayout(transparency_layout)
+        appearance_layout.addLayout(transparency_layout)
 
-        group_box.setLayout(layout)
-        self.grid_layout.addWidget(group_box, 1, 0)
+        appearance_group.setLayout(appearance_layout)
+        layout.addWidget(appearance_group)
 
-    def create_model_settings_group(self):
-        group_box = QGroupBox("Model Settings")
-        layout = QVBoxLayout()
+        # Voice Activation Settings Group
+        voice_group = QGroupBox("Voice Activation Settings")
+        voice_layout = QVBoxLayout()
 
-        # Models selection in form layout
+        self.hey_llama_chat_checkbox = QCheckBox('Say "Hey Llama" to open chat form')
+        self.hey_llama_chat_checkbox.stateChanged.connect(self.update_hey_llama_mic_state)
+        voice_layout.addWidget(self.hey_llama_chat_checkbox)
+
+        self.hey_llama_mic_checkbox = QCheckBox('Say "Hey Llama" to activate microphone')
+        voice_layout.addWidget(self.hey_llama_mic_checkbox)
+
+        voice_group.setLayout(voice_layout)
+        layout.addWidget(voice_group)
+
+        layout.addStretch()
+        self.tab_widget.addTab(tab, "⚙️ General")
+
+    def create_models_tab(self):
+        """Create the Models tab with model selection and generation parameters"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        # Model Selection Group
+        model_group = QGroupBox("Model Selection")
         models_form = QFormLayout()
         models_form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
@@ -146,9 +228,11 @@ class SettingsDialog(QDialog):
         self.multimodal_model_combo.addItems(self.get_model_names_by_type("image"))
         models_form.addRow("Multimodal Model:", self.multimodal_model_combo)
 
-        layout.addLayout(models_form)
+        model_group.setLayout(models_form)
+        layout.addWidget(model_group)
 
-        # Generation parameters in a grid layout
+        # Generation Parameters Group
+        gen_group = QGroupBox("Generation Parameters")
         grid_layout = QGridLayout()
         grid_layout.setColumnStretch(1, 1)
         grid_layout.setColumnStretch(3, 1)
@@ -169,43 +253,36 @@ class SettingsDialog(QDialog):
         grid_layout.addWidget(QLabel("Top k:"), 1, 2)
         grid_layout.addWidget(self.top_k_input, 1, 3)
 
-        layout.addLayout(grid_layout)
+        gen_group.setLayout(grid_layout)
+        layout.addWidget(gen_group)
 
+        # Custom Models Button
         self.manage_custom_models_button = QPushButton("Manage Custom Models")
         self.manage_custom_models_button.clicked.connect(self.open_custom_models_dialog)
         layout.addWidget(self.manage_custom_models_button)
 
-        group_box.setLayout(layout)
-        self.grid_layout.addWidget(group_box, 0, 1, 2, 1)
+        layout.addStretch()
+        self.tab_widget.addTab(tab, "🤖 Models")
 
-    def create_voice_activation_settings_group(self):
-        group_box = QGroupBox("Voice Activation Settings")
-        layout = QVBoxLayout()
+    def create_rag_tab(self):
+        """Create the RAG tab with embedding and retrieval settings"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
 
-        self.hey_llama_chat_checkbox = QCheckBox('Say "Hey Llama" to open chat form')
-        self.hey_llama_chat_checkbox.stateChanged.connect(self.update_hey_llama_mic_state)
-        layout.addWidget(self.hey_llama_chat_checkbox)
-
-        self.hey_llama_mic_checkbox = QCheckBox('Say "Hey Llama" to activate microphone')
-        layout.addWidget(self.hey_llama_mic_checkbox)
-
-        group_box.setLayout(layout)
-        self.grid_layout.addWidget(group_box, 2, 0)
-
-    def create_rag_settings_group(self):
-        group_box = QGroupBox("RAG Settings")
-        layout = QVBoxLayout()
-
-        # Embed model selection
+        # Embed Model Group
+        embed_group = QGroupBox("Embedding Model")
         form_layout = QFormLayout()
         form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.embed_model_combo = QComboBox()
         self.embed_model_combo.addItems(config.DEFAULT_EMBEDING_MODELS)
         form_layout.addRow("Embed Model:", self.embed_model_combo)
-        layout.addLayout(form_layout)
 
-        # RAG parameters organized in a grid
+        embed_group.setLayout(form_layout)
+        layout.addWidget(embed_group)
+
+        # RAG Parameters Group
+        rag_group = QGroupBox("RAG Parameters")
         params_layout = QGridLayout()
         params_layout.setColumnStretch(1, 1)
         params_layout.setColumnStretch(3, 1)
@@ -226,10 +303,193 @@ class SettingsDialog(QDialog):
         params_layout.addWidget(QLabel("Similarity Threshold:"), 1, 2)
         params_layout.addWidget(self.similarity_threshold_input, 1, 3)
 
-        layout.addLayout(params_layout)
+        rag_group.setLayout(params_layout)
+        layout.addWidget(rag_group)
 
-        group_box.setLayout(layout)
-        self.grid_layout.addWidget(group_box, 2, 1)
+        layout.addStretch()
+        self.tab_widget.addTab(tab, "📚 RAG")
+
+    def create_actions_tab(self):
+        """Create the Actions tab for managing custom actions"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        # Info label
+        info_label = QLabel(
+            "Manage action buttons that appear in the main interface. " "Drag to reorder actions."
+        )
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet("color: #666; padding: 5px; font-size: 12px;")
+        layout.addWidget(info_label)
+
+        # Action list
+        list_label = QLabel("Actions:")
+        list_label.setStyleSheet("font-weight: bold; margin-top: 5px;")
+        layout.addWidget(list_label)
+
+        self.action_list = QListWidget()
+        self.action_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
+        self.action_list.itemSelectionChanged.connect(self.load_selected_action)
+        self.action_list.setMinimumHeight(120)
+        self.action_list.setMaximumHeight(150)
+        self.action_list.setStyleSheet(
+            """
+            QListWidget {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 5px;
+                border-radius: 3px;
+            }
+            QListWidget::item:selected {
+                background-color: #0078d4;
+                color: white;
+            }
+        """
+        )
+        layout.addWidget(self.action_list)
+
+        # Form for editing actions
+        form_group = QGroupBox("Action Details")
+        form_group.setStyleSheet(
+            """
+            QGroupBox {
+                font-weight: bold;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+            }
+        """
+        )
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(8)
+
+        # ID field
+        id_layout = QHBoxLayout()
+        id_label = QLabel("ID:")
+        id_label.setMinimumWidth(80)
+        id_label.setStyleSheet("font-weight: normal;")
+        self.action_id_input = QLineEdit()
+        self.action_id_input.setPlaceholderText("unique_id (no spaces)")
+        self.action_id_input.setStyleSheet(
+            "padding: 5px; border: 1px solid #ccc; border-radius: 3px;"
+        )
+        id_layout.addWidget(id_label)
+        id_layout.addWidget(self.action_id_input)
+        form_layout.addLayout(id_layout)
+
+        # Label field
+        label_layout = QHBoxLayout()
+        label_label = QLabel("Label:")
+        label_label.setMinimumWidth(80)
+        label_label.setStyleSheet("font-weight: normal;")
+        self.action_label_input = QLineEdit()
+        self.action_label_input.setPlaceholderText("Button Label")
+        self.action_label_input.setStyleSheet(
+            "padding: 5px; border: 1px solid #ccc; border-radius: 3px;"
+        )
+        label_layout.addWidget(label_label)
+        label_layout.addWidget(self.action_label_input)
+        form_layout.addLayout(label_layout)
+
+        # Prompt field
+        prompt_label = QLabel("Prompt:")
+        prompt_label.setStyleSheet("font-weight: normal; margin-top: 5px;")
+        form_layout.addWidget(prompt_label)
+
+        self.action_prompt_input = MarkdownTextEdit()
+        self.action_prompt_input.setPlaceholderText(
+            "Prompt to send to the model (e.g., 'Summarize the following text:')"
+        )
+        self.action_prompt_input.setMinimumHeight(60)
+        self.action_prompt_input.setMaximumHeight(100)
+        self.action_prompt_input.setStyleSheet(
+            """
+            QTextEdit {
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                font-family: inherit;
+            }
+        """
+        )
+        form_layout.addWidget(self.action_prompt_input)
+
+        # Visible checkbox
+        visible_layout = QHBoxLayout()
+        visible_label = QLabel("Visible:")
+        visible_label.setMinimumWidth(80)
+        visible_label.setStyleSheet("font-weight: normal;")
+        self.action_visible_checkbox = QCheckBox()
+        self.action_visible_checkbox.setChecked(True)
+        visible_layout.addWidget(visible_label)
+        visible_layout.addWidget(self.action_visible_checkbox)
+        visible_layout.addStretch()
+        form_layout.addLayout(visible_layout)
+
+        form_group.setLayout(form_layout)
+        layout.addWidget(form_group)
+
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(8)
+
+        button_style = """
+            QPushButton {
+                padding: 8px 16px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background-color: #f0f0f0;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0;
+                border-color: #999;
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0;
+            }
+        """
+
+        self.add_action_button = QPushButton("Add")
+        self.add_action_button.clicked.connect(self.add_action)
+        self.add_action_button.setStyleSheet(button_style)
+
+        self.update_action_button = QPushButton("Update")
+        self.update_action_button.clicked.connect(self.update_action)
+        self.update_action_button.setStyleSheet(button_style)
+
+        self.reset_action_button = QPushButton("Reset to Default")
+        self.reset_action_button.clicked.connect(self.reset_action)
+        self.reset_action_button.setStyleSheet(button_style)
+
+        self.remove_action_button = QPushButton("Remove")
+        self.remove_action_button.clicked.connect(self.remove_action)
+        self.remove_action_button.setStyleSheet(button_style)
+
+        button_layout.addWidget(self.add_action_button)
+        button_layout.addWidget(self.update_action_button)
+        button_layout.addWidget(self.reset_action_button)
+        button_layout.addWidget(self.remove_action_button)
+        button_layout.addStretch()
+
+        layout.addLayout(button_layout)
+        layout.addStretch()
+
+        self.tab_widget.addTab(tab, "⚡ Actions")
+
+        # Load actions after tab is created
+        self.refresh_action_list()
 
     def accept(self):
         valid, message = validate_numeric_field(
@@ -301,6 +561,19 @@ class SettingsDialog(QDialog):
         if not valid:
             QMessageBox.warning(self, "Validation Error", message)
             return
+
+        # Update action order based on current list position
+        for i in range(self.action_list.count()):
+            item_text = self.action_list.item(i).text()
+            # Extract ID from the item text
+            action_id = item_text.split("(")[-1].rstrip(")")
+            for action in config.actions:
+                if action["id"] == action_id:
+                    action["order"] = i
+                    break
+
+        # Save actions
+        config.save_actions()
 
         self.save_settings()
         self.settingsSaved.emit()
@@ -457,6 +730,162 @@ class SettingsDialog(QDialog):
             # Refresh the model combos after managing custom models
             self.refresh_model_combos()
         self.refresh_model_combos()  # Run refresh_model_combos after closing the custom models editor
+
+    def refresh_action_list(self):
+        self.action_list.clear()
+        # Sort by order
+        sorted_actions = sorted(config.actions, key=lambda x: x.get("order", 999))
+        for action in sorted_actions:
+            visibility = "✓" if action.get("visible", True) else "✗"
+            self.action_list.addItem(f"{visibility} {action['label']} ({action['id']})")
+
+    def load_selected_action(self):
+        selected_items = self.action_list.selectedItems()
+        if selected_items:
+            selected_index = self.action_list.row(selected_items[0])
+            sorted_actions = sorted(config.actions, key=lambda x: x.get("order", 999))
+            action = sorted_actions[selected_index]
+
+            self.action_id_input.setText(action["id"])
+            self.action_label_input.setText(action["label"])
+            self.action_prompt_input.setPlainText(action["prompt"])
+            self.action_visible_checkbox.setChecked(action.get("visible", True))
+
+    def add_action(self):
+        action_id = self.action_id_input.text().strip()
+        action_label = self.action_label_input.text().strip()
+        action_prompt = self.action_prompt_input.toPlainText().strip()
+
+        if not all([action_id, action_label, action_prompt]):
+            QMessageBox.warning(self, "Missing Information", "Please fill in all fields.")
+            return
+
+        # Check if ID already exists
+        if any(a["id"] == action_id for a in config.actions):
+            QMessageBox.warning(
+                self, "Duplicate ID", f"Action with ID '{action_id}' already exists."
+            )
+            return
+
+        new_action = {
+            "id": action_id,
+            "label": action_label,
+            "prompt": action_prompt,
+            "visible": self.action_visible_checkbox.isChecked(),
+            "order": len(config.actions),
+            "custom": True,
+        }
+
+        config.actions.append(new_action)
+        config.save_actions()  # Auto-save
+        self.refresh_action_list()
+        self.clear_action_inputs()
+        QMessageBox.information(
+            self, "Action Added", f"Action '{action_label}' has been added successfully."
+        )
+
+    def update_action(self):
+        selected_items = self.action_list.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "No Selection", "Please select an action to update.")
+            return
+
+        selected_index = self.action_list.row(selected_items[0])
+        sorted_actions = sorted(config.actions, key=lambda x: x.get("order", 999))
+        action = sorted_actions[selected_index]
+
+        # Find the action in the original list
+        original_index = config.actions.index(action)
+
+        action_id = self.action_id_input.text().strip()
+        action_label = self.action_label_input.text().strip()
+        action_prompt = self.action_prompt_input.toPlainText().strip()
+
+        if not all([action_id, action_label, action_prompt]):
+            QMessageBox.warning(self, "Missing Information", "Please fill in all fields.")
+            return
+
+        # Check if ID already exists (excluding current action)
+        if action_id != action["id"] and any(a["id"] == action_id for a in config.actions):
+            QMessageBox.warning(
+                self, "Duplicate ID", f"Action with ID '{action_id}' already exists."
+            )
+            return
+
+        config.actions[original_index]["id"] = action_id
+        config.actions[original_index]["label"] = action_label
+        config.actions[original_index]["prompt"] = action_prompt
+        config.actions[original_index]["visible"] = self.action_visible_checkbox.isChecked()
+
+        config.save_actions()  # Auto-save
+        self.refresh_action_list()
+        self.clear_action_inputs()
+        QMessageBox.information(
+            self, "Action Updated", f"Action '{action_label}' has been updated successfully."
+        )
+
+    def reset_action(self):
+        selected_items = self.action_list.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "No Selection", "Please select an action to reset.")
+            return
+
+        selected_index = self.action_list.row(selected_items[0])
+        sorted_actions = sorted(config.actions, key=lambda x: x.get("order", 999))
+        action = sorted_actions[selected_index]
+
+        # Check if it's a default action
+        default_action = next((a for a in config.DEFAULT_ACTIONS if a["id"] == action["id"]), None)
+
+        if not default_action:
+            QMessageBox.information(
+                self, "Not a Default Action", "This is a custom action. Use 'Remove' to delete it."
+            )
+            return
+
+        # Find the action in the original list
+        original_index = config.actions.index(action)
+
+        # Reset to default values but keep the order
+        current_order = config.actions[original_index].get("order", default_action["order"])
+        config.actions[original_index] = default_action.copy()
+        config.actions[original_index]["order"] = current_order
+
+        config.save_actions()  # Auto-save
+        self.refresh_action_list()
+        self.clear_action_inputs()
+        QMessageBox.information(
+            self, "Action Reset", f"Action '{action['label']}' has been reset to default."
+        )
+
+    def remove_action(self):
+        selected_items = self.action_list.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "No Selection", "Please select an action to remove.")
+            return
+
+        selected_index = self.action_list.row(selected_items[0])
+        sorted_actions = sorted(config.actions, key=lambda x: x.get("order", 999))
+        action = sorted_actions[selected_index]
+
+        # Find the action in the original list
+        original_index = config.actions.index(action)
+        action_label = action["label"]
+
+        del config.actions[original_index]
+
+        config.save_actions()  # Auto-save
+        self.refresh_action_list()
+        self.clear_action_inputs()
+        QMessageBox.information(
+            self, "Action Removed", f"Action '{action_label}' has been removed successfully."
+        )
+
+    def clear_action_inputs(self):
+        self.action_id_input.clear()
+        self.action_label_input.clear()
+        self.action_prompt_input.clear()
+        self.action_visible_checkbox.setChecked(True)
 
     def refresh_model_combos(self):
         current_text_model = self.text_model_combo.currentText()

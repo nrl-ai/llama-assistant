@@ -59,7 +59,9 @@ class ProcessingThread(QThread):
                 print(delta["content"], end="")
                 full_response_str += delta["content"]
                 self.update_signal.emit(delta["content"])
-        model_handler.update_chat_history(full_response_str, "assistant")
+
+        # Add both user message and assistant response to history together
+        model_handler.add_conversation_turn(self.prompt, full_response_str, self.image)
         self.finished_signal.emit()
 
     def clear_chat_history(self):

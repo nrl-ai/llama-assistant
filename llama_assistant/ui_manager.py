@@ -189,25 +189,12 @@ class UIManager:
         self.reasoning_button.clicked.connect(self.parent.toggle_reasoning)
         self.tool_layout.addWidget(self.reasoning_button)
 
-        button_layout = QHBoxLayout()
-        button_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.summarize_button = QPushButton("Summarize", self.parent)
-        self.rephrase_button = QPushButton("Rephrase", self.parent)
-        self.fix_grammar_button = QPushButton("Fix Grammar", self.parent)
-        self.brainstorm_button = QPushButton("Brainstorm", self.parent)
-        self.write_email_button = QPushButton("Write Email", self.parent)
-
-        for button in [
-            self.summarize_button,
-            self.rephrase_button,
-            self.fix_grammar_button,
-            self.brainstorm_button,
-            self.write_email_button,
-        ]:
-            button.clicked.connect(self.parent.on_task_button_clicked)
-            button_layout.addWidget(button)
-
-        top_layout.addLayout(button_layout)
+        # Dynamic action buttons layout
+        self.action_button_layout = QHBoxLayout()
+        self.action_button_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.action_buttons = {}
+        self.create_action_buttons()
+        top_layout.addLayout(self.action_button_layout)
         main_layout.addLayout(top_layout)
 
         result_layout = QHBoxLayout()
@@ -307,13 +294,7 @@ class UIManager:
                 background-color: rgba{QColor(self.parent.settings["color"]).lighter(120).getRgb()[:3] + (opacity,)};
             }}
         """
-        for button in [
-            self.rephrase_button,
-            self.fix_grammar_button,
-            self.brainstorm_button,
-            self.write_email_button,
-            self.summarize_button,
-        ]:
+        for button in self.action_buttons.values():
             button.setStyleSheet(button_style)
 
         button_style = f"""
@@ -390,3 +371,30 @@ class UIManager:
                 }}
             """
         self.reasoning_button.setStyleSheet(button_style)
+
+    def create_action_buttons(self):
+        # Clear existing buttons
+        for button in self.action_buttons.values():
+            button.deleteLater()
+        self.action_buttons.clear()
+
+        # Import config here to get latest actions
+        from llama_assistant import config
+
+        # Sort actions by order and filter visible ones
+        visible_actions = [a for a in config.actions if a.get("visible", True)]
+        sorted_actions = sorted(visible_actions, key=lambda x: x.get("order", 999))
+
+        # Create buttons for each action
+        for action in sorted_actions:
+            button = QPushButton(action["label"], self.parent)
+            button.setProperty("action_id", action["id"])
+            button.setProperty("action_prompt", action["prompt"])
+            button.clicked.connect(self.parent.on_task_button_clicked)
+            self.action_button_layout.addWidget(button)
+            self.action_buttons[action["id"]] = button
+
+    def refresh_action_buttons(self):
+        """Refresh action buttons when actions are updated"""
+        self.create_action_buttons()
+        self.update_styles()

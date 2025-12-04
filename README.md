@@ -77,6 +77,7 @@ https://github.com/user-attachments/assets/af2c544b-6d46-4c44-87d8-9a051ba213db
 - 🖼️ Image analysis capabilities (TODO).
 - ⚡ Global hotkey for quick access (Cmd+Shift+Space on macOS).
 - 🎨 Customizable UI with adjustable transparency.
+- ⚙️ **Custom Actions**: Create, edit, hide, and reorder action buttons with custom prompts. [Learn more](docs/custom-actions.md)
 
 **Note:** This project is a work in progress, and new features are being added regularly.
 

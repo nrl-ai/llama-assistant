@@ -51,6 +51,44 @@ DEFAULT_EMBEDING_MODELS = [
     "BAAI/bge-large-en-v1.5",
 ]
 
+DEFAULT_ACTIONS = [
+    {
+        "id": "summarize",
+        "label": "Summarize",
+        "prompt": "Please provide a concise summary of the following text:",
+        "visible": True,
+        "order": 0,
+    },
+    {
+        "id": "rephrase",
+        "label": "Rephrase",
+        "prompt": "Please rephrase the following text in a different way while keeping the same meaning:",
+        "visible": True,
+        "order": 1,
+    },
+    {
+        "id": "fix_grammar",
+        "label": "Fix Grammar",
+        "prompt": "Please correct any grammar, spelling, and punctuation errors in the following text:",
+        "visible": True,
+        "order": 2,
+    },
+    {
+        "id": "brainstorm",
+        "label": "Brainstorm",
+        "prompt": "Please brainstorm creative ideas related to the following topic:",
+        "visible": True,
+        "order": 3,
+    },
+    {
+        "id": "write_email",
+        "label": "Write Email",
+        "prompt": "Please write a professional email about the following topic:",
+        "visible": True,
+        "order": 4,
+    },
+]
+
 DEFAULT_MODELS = [
     # LLMs
     {
@@ -191,6 +229,7 @@ llama_assistant_dir = home_dir / "llama_assistant"
 pathlib.Path.mkdir(llama_assistant_dir, parents=True, exist_ok=True)
 custom_models_file = llama_assistant_dir / "custom_models.json"
 settings_file = llama_assistant_dir / "settings.json"
+actions_file = llama_assistant_dir / "actions.json"
 document_icon = "llama_assistant/resources/document_icon.png"
 ocr_tmp_file = llama_assistant_dir / "ocr_tmp.png"
 
@@ -221,3 +260,26 @@ def save_custom_models():
     with open(custom_models_file, "w") as f:
         json.dump({"custom_models": custom_models}, f, indent=2)
     models = DEFAULT_MODELS + custom_models
+
+
+# Load actions
+if actions_file.exists():
+    with open(actions_file, "r") as f:
+        try:
+            actions_data = json.load(f)
+        except json.JSONDecodeError:
+            actions_data = {"actions": DEFAULT_ACTIONS.copy()}
+    actions = actions_data.get("actions", DEFAULT_ACTIONS.copy())
+else:
+    actions = DEFAULT_ACTIONS.copy()
+
+# Save the initial actions if it doesn't exist
+if not actions_file.exists():
+    with open(actions_file, "w") as f:
+        json.dump({"actions": actions}, f, indent=2)
+
+
+def save_actions():
+    global actions
+    with open(actions_file, "w") as f:
+        json.dump({"actions": actions}, f, indent=2)

@@ -9,6 +9,8 @@ from llama_cpp.llama_chat_format import (
     Llava15ChatHandler,
     Llava16ChatHandler,
 )
+from huggingface_hub import hf_hub_download
+from tqdm import tqdm
 
 from llama_assistant import config
 from llama_assistant.agent import RAGAgent
@@ -86,54 +88,88 @@ class ModelHandler:
         if model.is_online():
             if model.model_type == "text" or model.model_type == "text-reasoning":
                 print("load online model")
-                loaded_model = Llama.from_pretrained(
+                # Download with progress bar
+                model_path = hf_hub_download(
                     repo_id=model.repo_id,
                     filename=model.filename,
+                    resume_download=True,
+                    tqdm_class=tqdm,
+                )
+                loaded_model = Llama(
+                    model_path=model_path,
                     n_gpu_layers=-1,
                     n_ctx=generation_setting["context_len"],
                 )
             elif model.model_type == "image":
                 if "moondream2" in model.model_id:
+                    print("Downloading vision model projector...")
                     chat_handler = MoondreamChatHandler.from_pretrained(
                         repo_id="vikhyatk/moondream2",
                         filename="*mmproj*",
                     )
-                    loaded_model = Llama.from_pretrained(
+                    print("Downloading main model...")
+                    model_path = hf_hub_download(
                         repo_id=model.repo_id,
                         filename=model.filename,
+                        resume_download=True,
+                        tqdm_class=tqdm,
+                    )
+                    loaded_model = Llama(
+                        model_path=model_path,
                         chat_handler=chat_handler,
                         n_ctx=generation_setting["context_len"],
                     )
                 elif "MiniCPM" in model.model_id:
+                    print("Downloading vision model projector...")
                     chat_handler = MiniCPMv26ChatHandler.from_pretrained(
                         repo_id=model.repo_id,
                         filename="*mmproj*",
                     )
-                    loaded_model = Llama.from_pretrained(
+                    print("Downloading main model...")
+                    model_path = hf_hub_download(
                         repo_id=model.repo_id,
                         filename=model.filename,
+                        resume_download=True,
+                        tqdm_class=tqdm,
+                    )
+                    loaded_model = Llama(
+                        model_path=model_path,
                         chat_handler=chat_handler,
                         n_ctx=generation_setting["context_len"],
                     )
                 elif "llava-v1.5" in model.model_id:
+                    print("Downloading vision model projector...")
                     chat_handler = Llava15ChatHandler.from_pretrained(
                         repo_id=model.repo_id,
                         filename="*mmproj*",
                     )
-                    loaded_model = Llama.from_pretrained(
+                    print("Downloading main model...")
+                    model_path = hf_hub_download(
                         repo_id=model.repo_id,
                         filename=model.filename,
+                        resume_download=True,
+                        tqdm_class=tqdm,
+                    )
+                    loaded_model = Llama(
+                        model_path=model_path,
                         chat_handler=chat_handler,
                         n_ctx=generation_setting["context_len"],
                     )
                 elif "llava-v1.6" in model.model_id:
+                    print("Downloading vision model projector...")
                     chat_handler = Llava16ChatHandler.from_pretrained(
                         repo_id=model.repo_id,
                         filename="*mmproj*",
                     )
-                    loaded_model = Llama.from_pretrained(
+                    print("Downloading main model...")
+                    model_path = hf_hub_download(
                         repo_id=model.repo_id,
                         filename=model.filename,
+                        resume_download=True,
+                        tqdm_class=tqdm,
+                    )
+                    loaded_model = Llama(
+                        model_path=model_path,
                         chat_handler=chat_handler,
                         n_ctx=generation_setting["context_len"],
                     )

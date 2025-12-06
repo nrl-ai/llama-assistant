@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llama-assistant"
-version = "0.1.43"
+version = "0.1.44"
 authors = [
     {name = "Viet-Anh Nguyen", email = "vietanh.dev@gmail.com"},
 ]
@@ -42,7 +42,7 @@ dependencies = [
     "mistune==3.0.2",
     "paddlepaddle==2.6.2",
     "paddleocr==2.9.1",
-    "whispercpp @ git+https://github.com/stlukey/whispercpp.py"
+    "whispercpp-kit>=0.1.0",
 ]
 dynamic = []
 

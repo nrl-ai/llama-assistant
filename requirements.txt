@@ -16,4 +16,4 @@ docx2txt==0.8
 mistune==3.0.2
 paddlepaddle==2.6.2
 paddleocr==3.3.2
-whispercpp @ git+https://github.com/stlukey/whispercpp.py
+whispercpp-kit>=0.1.0

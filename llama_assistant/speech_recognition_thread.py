@@ -7,7 +7,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 import pyaudio
 import wave
 
-from whispercpp import Whisper
+from whispercpp_kit import WhisperCPP
 from llama_assistant.config import llama_assistant_dir
 
 
@@ -22,8 +22,9 @@ class SpeechRecognitionThread(QThread):
         self.stop_listening = False
         self.recording = False
 
-        # Initialize Whisper model
-        self.whisper = Whisper("tiny")
+        # Initialize Whisper model with progress
+        print("Initializing Whisper model (downloading if needed)...")
+        self.whisper = WhisperCPP(model_name="tiny")
 
         # Create temporary folder for audio files
         self.tmp_audio_folder = llama_assistant_dir / "tmp_audio"
@@ -74,13 +75,10 @@ class SpeechRecognitionThread(QThread):
             wf.close()
 
             # Transcribe audio
-            res = self.whisper.transcribe(str(tmp_filepath))
-            transcription = self.whisper.extract_text(res)
-
-            if isinstance(transcription, list):
-                # Remove all "[BLANK_AUDIO]" from the transcription
-                transcription = " ".join(transcription)
-                transcription = re.sub(r"\[BLANK_AUDIO\]", "", transcription)
+            transcription = self.whisper.transcribe(str(tmp_filepath))
+            
+            # Remove all "[BLANK_AUDIO]" from the transcription
+            transcription = re.sub(r"\[BLANK_AUDIO\]", "", transcription)
 
             if transcription.strip():  # Only emit if there's non-empty transcription
                 self.finished.emit(transcription)
